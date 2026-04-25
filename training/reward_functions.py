@@ -36,10 +36,10 @@ def compute_training_reward(
     ):
         consistency_bonus = 0.3
 
-    # Component 4: format bonus — all actions started with a valid command
-    format_bonus = _format_reward(full_episode_info)
-
-    total = task_reward + side_task_penalty + consistency_bonus + format_bonus + env_reward
+    # env_reward is intentionally excluded: the server already encodes
+    # task_reward + side_penalty + consistency_bonus in its terminal reward,
+    # so adding env_reward here would double-count all three components.
+    total = task_reward + side_task_penalty + consistency_bonus
     return float(round(total, 4))
 
 
