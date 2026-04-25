@@ -1,9 +1,26 @@
+import os
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from honeypot_env import HoneypotEnv
 
-app = FastAPI(title="Honeypot Arena", version="1.0.0")
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    authtoken = os.environ.get("NGROK_AUTHTOKEN")
+    if authtoken:
+        from pyngrok import ngrok
+        ngrok.set_auth_token(authtoken)
+        port = int(os.environ.get("PORT", 7860))
+        tunnel = ngrok.connect(port)
+        print(f"\n{'='*60}")
+        print(f"  NGROK PUBLIC URL: {tunnel.public_url}")
+        print(f"{'='*60}\n")
+    yield
+
+
+app = FastAPI(title="Honeypot Arena", version="1.0.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
