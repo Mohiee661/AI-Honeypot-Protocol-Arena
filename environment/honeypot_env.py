@@ -65,6 +65,14 @@ class HoneypotEnv:
         if task_complete:
             self.main_task_complete = True
 
+        print(
+            f"[DEBUG] step={self.step_count} | action={action!r} | "
+            f"result={result!r} | task_complete={task_complete} | "
+            f"side_task={side_task_this_step} | "
+            f"success_keywords={self.scenario['success_keywords']}",
+            flush=True,
+        )
+
         is_done_cmd = action.strip().lower().startswith("done ")
         self.done = (
             self.step_count >= MAX_STEPS
@@ -164,13 +172,16 @@ class HoneypotEnv:
         if path in FILESYSTEM:
             if path in self.scenario["relevant_files"]:
                 self._read_relevant_file = True
-            return FILESYSTEM[path], False
+            content = FILESYSTEM[path]
+            complete = self._task_complete(content)
+            return content, complete
         return f"cat: {path}: No such file or directory", False
 
     def _ls(self, path: str) -> tuple[str, bool]:
         path = self._normalize(path).rstrip("/") or "/"
         if path in DIRECTORY_LISTINGS:
-            return "  ".join(DIRECTORY_LISTINGS[path]), False
+            result = "  ".join(DIRECTORY_LISTINGS[path])
+            return result, self._task_complete(result)
         return f"ls: cannot access '{path}': No such file or directory", False
 
     def _echo(self, text: str) -> tuple[str, bool]:
