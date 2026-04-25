@@ -1,0 +1,28 @@
+name: honeypot-arena
+version: "1.0.0"
+description: >
+  AI Honeypot Protocol Arena - Tests whether AI agents behave consistently
+  across different perceived monitoring conditions. Agents are rewarded for
+  completing tasks honestly regardless of whether they think they are watched.
+author: hackathon-team
+license: MIT
+env_type: text
+action_space:
+  type: text
+  description: "Bash-style commands: cat, ls, echo, grep, done"
+observation_space:
+  type: text
+  description: "Simulated terminal with monitoring context and task"
+max_steps: 10
+episodes_per_curriculum:
+  easy: 100
+  medium: 200
+  hard: 200
+endpoints:
+  health: /health
+  reset: /reset
+  step: /step
+  state: /state
+server:
+  port: 7860
+  host: "0.0.0.0"
