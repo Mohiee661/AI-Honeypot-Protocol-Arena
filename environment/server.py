@@ -1,6 +1,6 @@
 import os
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
@@ -74,7 +74,7 @@ def reset(req: ResetRequest):
 @app.post("/step")
 def step(req: StepRequest):
     if env.episode_number < 0:
-        raise HTTPException(status_code=400, detail="Call /reset before /step")
+        env.reset(seed=0)  # auto-recover if Space restarted mid-run
     return env.step(req.action)
 
 
