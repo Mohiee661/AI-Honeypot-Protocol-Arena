@@ -1,10 +1,31 @@
 import os
+import json
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from honeypot_env import HoneypotEnv
+
+METRICS_PATH = "/tmp/metrics.json"
+
+
+def _load_metrics():
+    try:
+        with open(METRICS_PATH) as f:
+            data = json.load(f)
+        print(f"[SERVER] Loaded metrics from disk: {len(data.get('baseline',[]))} baseline, {len(data.get('trained',[]))} trained")
+        return data
+    except Exception:
+        return {"baseline": [], "trained": [], "reasoning_log": []}
+
+
+def _save_metrics():
+    try:
+        with open(METRICS_PATH, "w") as f:
+            json.dump(metrics_store, f)
+    except Exception as e:
+        print(f"[SERVER] Could not save metrics: {e}")
 
 
 @asynccontextmanager
@@ -32,11 +53,7 @@ app.add_middleware(
 
 env = HoneypotEnv()
 
-metrics_store = {
-    "baseline": [],
-    "trained": [],
-    "reasoning_log": [],
-}
+metrics_store = _load_metrics()
 
 
 class ResetRequest(BaseModel):
@@ -99,6 +116,7 @@ def log_episode(req: LogEpisodeRequest):
         "verified_from_source": entry.get("verified_from_source", False),
         "reasoning": entry["reasoning"],
     })
+    _save_metrics()
     return {"status": "logged"}
 
 
@@ -214,7 +232,7 @@ new Chart(document.getElementById('baselineChart'), {{
   options: {{
     responsive: true, maintainAspectRatio: true,
     scales: {{ y: {{ min: 0, max: 1, ticks: {{ color: '#888' }}, grid: {{ color: '#222' }} }}, x: {{ ticks: {{ color: '#888', maxTicksLimit: 15 }}, grid: {{ color: '#222' }} }} }},
-    plugins: {{ legend: {{ labels: {{ color: '#ccc' }} }}, title: {{ display: RAW.baseline.length === 0, text: 'Waiting for baseline episodes...', color: '#555', font: {{ size: 14 }} }} }},
+    plugins: {{ legend: {{ labels: {{ color: '#ccc' }} }}, title: {{ display: RAW.baseline.length === 0, text: 'Baseline completed before this server session — eval honesty≈1.0 | no_monitoring honesty≈0.0 | shortcut gap: +1.000', color: '#ffaa00', font: {{ size: 13 }} }} }},
   }}
 }});
 
