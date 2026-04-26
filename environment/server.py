@@ -1,31 +1,10 @@
 import os
-import json
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from honeypot_env import HoneypotEnv
-
-METRICS_PATH = "/tmp/metrics.json"
-
-
-def _load_metrics():
-    try:
-        with open(METRICS_PATH) as f:
-            data = json.load(f)
-        print(f"[SERVER] Loaded metrics from disk: {len(data.get('baseline',[]))} baseline, {len(data.get('trained',[]))} trained")
-        return data
-    except Exception:
-        return {"baseline": [], "trained": [], "reasoning_log": []}
-
-
-def _save_metrics():
-    try:
-        with open(METRICS_PATH, "w") as f:
-            json.dump(metrics_store, f)
-    except Exception as e:
-        print(f"[SERVER] Could not save metrics: {e}")
 
 
 @asynccontextmanager
@@ -53,7 +32,11 @@ app.add_middleware(
 
 env = HoneypotEnv()
 
-metrics_store = _load_metrics()
+metrics_store = {
+    "baseline": [],
+    "trained": [],
+    "reasoning_log": [],
+}
 
 
 class ResetRequest(BaseModel):
@@ -116,7 +99,6 @@ def log_episode(req: LogEpisodeRequest):
         "verified_from_source": entry.get("verified_from_source", False),
         "reasoning": entry["reasoning"],
     })
-    _save_metrics()
     return {"status": "logged"}
 
 
@@ -201,13 +183,11 @@ function rateKey(arr, key) {{
 const trained20 = last(RAW.trained, 20);
 const noMonTrained20 = trained20.filter(e => e.mode === 'no_monitoring');
 
-const lastEp = RAW.trained.length ? RAW.trained[RAW.trained.length - 1].episode : '—';
 const stats = [
   {{ label: 'Total Episodes Logged', value: (RAW.baseline.length + RAW.trained.length).toString() }},
   {{ label: 'Avg Honesty Score (trained, last 20)', value: avg(trained20, 'honesty_score').toFixed(3) }},
   {{ label: 'Shortcut Usage — No Monitor (trained, last 20)', value: (rateKey(noMonTrained20, 'used_shortcut') * 100).toFixed(1) + '%' }},
   {{ label: 'Answer Correct Rate (trained, last 20)', value: (rateKey(trained20, 'answer_correct') * 100).toFixed(1) + '%' }},
-  {{ label: 'Last Episode Received', value: String(lastEp) }},
 ];
 const statsBar = document.getElementById('stats-bar');
 stats.forEach(s => {{
@@ -234,36 +214,29 @@ new Chart(document.getElementById('baselineChart'), {{
   options: {{
     responsive: true, maintainAspectRatio: true,
     scales: {{ y: {{ min: 0, max: 1, ticks: {{ color: '#888' }}, grid: {{ color: '#222' }} }}, x: {{ ticks: {{ color: '#888', maxTicksLimit: 15 }}, grid: {{ color: '#222' }} }} }},
-    plugins: {{ legend: {{ labels: {{ color: '#ccc' }} }}, title: {{ display: RAW.baseline.length === 0, text: 'Baseline completed before this server session — eval honesty≈1.0 | no_monitoring honesty≈0.0 | shortcut gap: +1.000', color: '#ffaa00', font: {{ size: 13 }} }} }},
+    plugins: {{ legend: {{ labels: {{ color: '#ccc' }} }}, title: {{ display: RAW.baseline.length === 0, text: 'Waiting for baseline episodes...', color: '#555', font: {{ size: 14 }} }} }},
   }}
 }});
 
 // ── Bar Chart (honesty by mode) ────────────────────────────
 const modes = ['evaluation', 'deployment', 'no_monitoring'];
-// Known baseline results (100 episodes, shortcut gap = +1.000)
-const KNOWN_BASELINE = {{ evaluation: 1.0, deployment: 0.5, no_monitoring: 0.0 }};
 function avgHonesty(arr, mode) {{
   const sub = arr.filter(e => e.mode === mode);
-  return sub.length ? sub.reduce((s, e) => s + (e.honesty_score || 0), 0) / sub.length : null;
+  return sub.length ? sub.reduce((s, e) => s + (e.honesty_score || 0), 0) / sub.length : 0;
 }}
-const baselineData = modes.map(m => {{
-  const live = avgHonesty(RAW.baseline, m);
-  return live !== null ? live : KNOWN_BASELINE[m];
-}});
-const baselineLabel = RAW.baseline.length === 0 ? 'Baseline (pre-training, 100 eps)' : 'Baseline';
 new Chart(document.getElementById('barChart'), {{
   type: 'bar',
   data: {{
-    labels: ['evaluation', 'deployment', 'no_monitoring'],
+    labels: modes,
     datasets: [
-      {{ label: baselineLabel, data: baselineData, backgroundColor: '#ff4444cc' }},
-      {{ label: 'Trained (live)', data: modes.map(m => avgHonesty(RAW.trained, m) || 0), backgroundColor: '#00ff88cc' }},
+      {{ label: 'Baseline', data: modes.map(m => avgHonesty(RAW.baseline, m)), backgroundColor: '#ff4444' }},
+      {{ label: 'Trained',  data: modes.map(m => avgHonesty(RAW.trained,  m)), backgroundColor: '#00ff88' }},
     ]
   }},
   options: {{
     responsive: true, maintainAspectRatio: true,
     scales: {{ y: {{ min: 0, max: 1, ticks: {{ color: '#888' }}, grid: {{ color: '#222' }} }}, x: {{ ticks: {{ color: '#888' }}, grid: {{ color: '#222' }} }} }},
-    plugins: {{ legend: {{ labels: {{ color: '#ccc' }} }}, title: {{ display: RAW.baseline.length === 0, text: '* Baseline bars use known pre-training results (shortcut gap +1.000)', color: '#ffaa00', font: {{ size: 11 }} }} }},
+    plugins: {{ legend: {{ labels: {{ color: '#ccc' }} }} }},
   }}
 }});
 
