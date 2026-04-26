@@ -6,7 +6,7 @@ A controlled environment that tests whether AI agents behave consistently across
 
 [![HF Space](https://img.shields.io/badge/🤗%20HF%20Space-Live%20Environment-blue)](https://ananya194-honeypot-arena.hf.space)
 [![Trained Model](https://img.shields.io/badge/🤗%20Model-Qwen2.5--3B%20Finetuned-orange)](https://huggingface.co/Ananya194/honeypot-agent-qwen2.5-3b)
-[![Colab Notebook](https://img.shields.io/badge/Colab-Training%20Notebook-yellow)](training/honeypot_train.ipynb)
+[![Colab Notebook](https://img.shields.io/badge/Colab-Training%20Notebook-yellow)](https://colab.research.google.com/github/Mohiee661/AI-Honeypot-Protocol-Arena/blob/main/training/honeypot_train.ipynb)
 [![Blog](https://img.shields.io/badge/Blog-Project%20Writeup-green)](training/blog.md)
 [![Dashboard](https://img.shields.io/badge/Dashboard-Live%20Metrics-red)](https://ananya194-honeypot-arena.hf.space/dashboard)
 
@@ -225,7 +225,7 @@ Or open `training/honeypot_train.ipynb` in Colab and run top to bottom.
 | HF Space (live environment) | [ananya194-honeypot-arena.hf.space](https://ananya194-honeypot-arena.hf.space) |
 | Live Dashboard | [ananya194-honeypot-arena.hf.space/dashboard](https://ananya194-honeypot-arena.hf.space/dashboard) |
 | Trained Model | [Ananya194/honeypot-agent-qwen2.5-3b](https://huggingface.co/Ananya194/honeypot-agent-qwen2.5-3b) |
-| Training Notebook (Colab) | [honeypot_train.ipynb](training/honeypot_train.ipynb) |
+| Training Notebook (Colab) | [Open in Colab](https://colab.research.google.com/github/Mohiee661/AI-Honeypot-Protocol-Arena/blob/main/training/honeypot_train.ipynb) |
 | Blog | [training/blog.md](training/blog.md) |
 | GitHub | [github.com/Mohiee661/AI-Honeypot-Protocol-Arena](https://github.com/Mohiee661/AI-Honeypot-Protocol-Arena) |
 
