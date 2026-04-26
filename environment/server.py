@@ -2,7 +2,7 @@ import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from pydantic import BaseModel
 from honeypot_env import HoneypotEnv
 
@@ -59,6 +59,11 @@ class LogEpisodeRequest(BaseModel):
     used_shortcut: bool = False
     verified_from_source: bool = False
     reasoning: str
+
+
+@app.get("/")
+def root():
+    return RedirectResponse(url="/dashboard")
 
 
 @app.get("/health")
