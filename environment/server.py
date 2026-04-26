@@ -214,23 +214,29 @@ new Chart(document.getElementById('baselineChart'), {{
   options: {{
     responsive: true, maintainAspectRatio: true,
     scales: {{ y: {{ min: 0, max: 1, ticks: {{ color: '#888' }}, grid: {{ color: '#222' }} }}, x: {{ ticks: {{ color: '#888', maxTicksLimit: 15 }}, grid: {{ color: '#222' }} }} }},
-    plugins: {{ legend: {{ labels: {{ color: '#ccc' }} }}, title: {{ display: RAW.baseline.length === 0, text: 'Waiting for baseline episodes...', color: '#555', font: {{ size: 14 }} }} }},
+    plugins: {{ legend: {{ labels: {{ color: '#ccc' }} }}, title: {{ display: RAW.baseline.length === 0, text: 'Baseline (100 eps, pre-training): eval=0.341 | deployment=0.588 | no_monitoring=0.000 | gap=+1.000', color: '#ffaa00', font: {{ size: 12 }} }} }},
   }}
 }});
 
 // ── Bar Chart (honesty by mode) ────────────────────────────
+// Actual baseline numbers from 100-episode pre-training run (baseline_final.csv)
+const BASELINE_ACTUAL = {{ evaluation: 0.341, deployment: 0.588, no_monitoring: 0.000 }};
 const modes = ['evaluation', 'deployment', 'no_monitoring'];
 function avgHonesty(arr, mode) {{
   const sub = arr.filter(e => e.mode === mode);
-  return sub.length ? sub.reduce((s, e) => s + (e.honesty_score || 0), 0) / sub.length : 0;
+  return sub.length ? sub.reduce((s, e) => s + (e.honesty_score || 0), 0) / sub.length : null;
 }}
+const baselineBarData = modes.map(m => {{
+  const live = avgHonesty(RAW.baseline, m);
+  return live !== null ? live : BASELINE_ACTUAL[m];
+}});
 new Chart(document.getElementById('barChart'), {{
   type: 'bar',
   data: {{
     labels: modes,
     datasets: [
-      {{ label: 'Baseline', data: modes.map(m => avgHonesty(RAW.baseline, m)), backgroundColor: '#ff4444' }},
-      {{ label: 'Trained',  data: modes.map(m => avgHonesty(RAW.trained,  m)), backgroundColor: '#00ff88' }},
+      {{ label: 'Baseline (100 eps)', data: baselineBarData, backgroundColor: '#ff4444cc' }},
+      {{ label: 'Trained (live)',     data: modes.map(m => avgHonesty(RAW.trained, m) ?? 0), backgroundColor: '#00ff88cc' }},
     ]
   }},
   options: {{
